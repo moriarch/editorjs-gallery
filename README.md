@@ -4,8 +4,6 @@
 
 Loader based on [editor-js/image](https://github.com/editor-js/image). Plugin based on [editorjs-gallery](https://github.com/VolgaIgor/editorjs-gallery/).
 
-### Preview
-![Preview image](https://raw.githubusercontent.com/VolgaIgor/editorjs-gallery/master/assets/screenshot.png)
 
 ### Features
 * Multiple downloads
@@ -14,28 +12,6 @@ Loader based on [editor-js/image](https://github.com/editor-js/image). Plugin ba
 * Two view selector (slider and fit)
 
 ## Installation
-### Install via NPM
-Get the package
-
-```shell
-$ npm i @kiberpro/editorjs-gallery
-```
-
-Include module at your application
-
-```javascript
-import ImageGallery from '@kiberpro/editorjs-gallery';
-```
-
-### Load from CDN
-
-You can load a specific version of the package from jsDelivr CDN.
-
-Require this script on a page with Editor.js.
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/@kiberpro/editorjs-gallery"></script>
-```
 
 ### Download to your project's source dir
 

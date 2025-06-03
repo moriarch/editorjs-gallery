@@ -2,7 +2,7 @@
 
 # Gallery block for Editor.js
 
-Loader based on [editor-js/image](https://github.com/editor-js/image).
+Loader based on [editor-js/image](https://github.com/editor-js/image). Plugin based on [editorjs-gallery](https://github.com/VolgaIgor/editorjs-gallery/).
 
 ### Preview
 ![Preview image](https://raw.githubusercontent.com/VolgaIgor/editorjs-gallery/master/assets/screenshot.png)

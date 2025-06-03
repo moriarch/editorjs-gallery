@@ -1,19 +1,6 @@
-import { IconPicture, IconTrash } from '@codexteam/icons'
+import { IconPicture, IconTrash } from '@codexteam/icons';
 
-/**
- * Class for working with UI:
- *  - rendering base structure
- *  - show/hide preview
- *  - apply tune view
- */
 export default class Ui {
-  /**
-   * @param {object} ui - image tool Ui module
-   * @param {object} ui.api - Editor.js API
-   * @param {ImageConfig} ui.config - user config
-   * @param {Function} ui.onSelectFile - callback for clicks on Select file button
-   * @param {boolean} ui.readOnly - read-only mode flag
-   */
   constructor({ api, config, onSelectFile, onDeleteFile, onMoveFile, readOnly }) {
     this.api = api;
     this.config = config;
@@ -21,6 +8,7 @@ export default class Ui {
     this.onDeleteFile = onDeleteFile;
     this.onMoveFile = onMoveFile;
     this.readOnly = readOnly;
+
     this.nodes = {
       wrapper: make('div', [this.CSS.baseClass, this.CSS.wrapper]),
       fileButton: this.createFileButton(),
@@ -28,28 +16,11 @@ export default class Ui {
       itemsContainer: make('div', this.CSS.itemsContainer),
       controls: make('div', this.CSS.controls),
       preloaderContainer: make('div', this.CSS.preloaderContainer),
-      caption: make('div', [this.CSS.input, this.CSS.caption], {
-        contentEditable: !this.readOnly,
+      caption: make('input', [this.CSS.input, this.CSS.caption], {
+        placeholder: this.api.i18n.t('Gallery caption'),
+        disabled: this.readOnly,
       }),
     };
-
-    /**
-     * Create base structure
-     *  <wrapper>
-     *    <container>
-     *      <items-container>
-     *        <image-container />
-     *      </items-container>
-     *      <controls>
-     *        <preloader-container />
-     *        <limit-counter />
-     *        <select-file-button />
-     *      </controls>
-     *    </container>
-     *    <caption />
-     *  </wrapper>
-     */
-    this.nodes.caption.dataset.placeholder = this.api.i18n.t('Gallery caption');
 
     if (!this.readOnly) {
       this.nodes.controls.appendChild(this.nodes.preloaderContainer);
@@ -65,8 +36,8 @@ export default class Ui {
       this.nodes.container.appendChild(this.nodes.controls);
     }
 
+    // Caption теперь в самом низу
     this.nodes.wrapper.appendChild(this.nodes.container);
-
     if (!this.readOnly) {
       this.nodes.wrapper.appendChild(this.nodes.caption);
     }
@@ -79,11 +50,6 @@ export default class Ui {
     });
   }
 
-  /**
-   * CSS classes
-   *
-   * @returns {object}
-   */
   get CSS() {
     return {
       baseClass: this.api.styles.block,
@@ -91,9 +57,6 @@ export default class Ui {
       input: this.api.styles.input,
       button: this.api.styles.button,
 
-      /**
-       * Tool's classes
-       */
       wrapper: 'image-gallery',
       container: 'image-gallery__container',
       controls: 'image-gallery__controls',
@@ -105,17 +68,10 @@ export default class Ui {
       imageEl: 'image-gallery__image-picture',
       trashButton: 'image-gallery__image-trash',
       caption: 'image-gallery__caption',
+      imageCaption: 'image-gallery__image-caption',
     };
-  };
+  }
 
-  /**
-   * Ui statuses:
-   * - empty
-   * - uploading
-   * - filled
-   *
-   * @returns {{EMPTY: string, UPLOADING: string, FILLED: string}}
-   */
   static get status() {
     return {
       EMPTY: 'empty',
@@ -124,12 +80,6 @@ export default class Ui {
     };
   }
 
-  /**
-   * Renders tool UI
-   *
-   * @param {ImageGalleryData} toolData - saved tool data
-   * @returns {Element}
-   */
   render(toolData) {
     return this.nodes.wrapper;
   }
@@ -144,66 +94,38 @@ export default class Ui {
         },
         onEnd: (evt) => {
           this.nodes.itemsContainer.classList.remove(`${this.CSS.itemsContainer}--drag`);
-
           if (evt.oldIndex !== evt.newIndex) {
             this.onMoveFile(evt.oldIndex, evt.newIndex);
           }
-        }
+        },
       });
-
-      this.nodes.itemsContainer.classList.add('sortable')
+      this.nodes.itemsContainer.classList.add('sortable');
     }
   }
 
-  /**
-   * Creates upload-file button
-   *
-   * @returns {Element}
-   */
   createFileButton() {
     const button = make('div', [this.CSS.button]);
-
     button.innerHTML = this.config.buttonContent || `${IconPicture} ${this.api.i18n.t('Select an Image')}`;
-
-    button.addEventListener('click', () => {
-      this.onSelectFile();
-    });
-
+    button.addEventListener('click', () => this.onSelectFile());
     return button;
   }
 
-  /**
-   * Shows uploading button
-   *
-   * @returns {void}
-   */
   showFileButton() {
     this.nodes.fileButton.style.display = '';
   }
 
-  /**
-   * Hide uploading button
-   *
-   * @returns {void}
-   */
   hideFileButton() {
     this.nodes.fileButton.style.display = 'none';
   }
 
   getPreloader(file) {
-    /**
-     * @type {HTMLElement}
-     */
     let preloader = make('div', this.CSS.imagePreloader);
-
     this.nodes.preloaderContainer.append(preloader);
-
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = (e) => {
       preloader.style.backgroundImage = `url(${e.target.result})`;
     };
-
     return preloader;
   }
 
@@ -211,173 +133,82 @@ export default class Ui {
     preloader.remove();
   }
 
-  /**
-   * Shows an image
-   *
-   * @param {ImageGalleryDataFile} file - image file object
-   * @returns {void}
-   */
   appendImage(file) {
     let url = file.url;
-
-    /**
-     * Check for a source extension to compose element correctly: video tag for mp4, img — for others
-     */
     const tag = /\.mp4$/.test(url) ? 'VIDEO' : 'IMG';
+    const attributes = { src: url };
 
-    const attributes = {
-      src: url
-    };
-
-    /**
-     * We use eventName variable because IMG and VIDEO tags have different event to be called on source load
-     * - IMG: load
-     * - VIDEO: loadeddata
-     *
-     * @type {string}
-     */
     let eventName = 'load';
-
-    /**
-     * Update attributes and eventName if source is a mp4 video
-     */
     if (tag === 'VIDEO') {
-      /**
-       * Add attributes for playing muted mp4 as a gif
-       *
-       * @type {boolean}
-       */
       attributes.autoplay = false;
       attributes.muted = true;
       attributes.playsinline = true;
-
-      /**
-       * Change event to be listened
-       *
-       * @type {string}
-       */
       eventName = 'loadeddata';
     }
 
-    /**
-     * @type {Element}
-     */
     let imageContainer = make('div', [this.CSS.imageContainer]);
-
-    /**
-     * Compose tag with defined attributes
-     *
-     * @type {Element}
-     */
     let imageEl = make(tag, this.CSS.imageEl, attributes);
 
-    /**
-     * Add load event listener
-     */
     imageEl.addEventListener(eventName, () => {
       this.toggleStatus(imageContainer, Ui.status.FILLED);
     });
 
     imageContainer.appendChild(imageEl);
 
-    const title = this.api.i18n.t('Delete');
+    const imageCaption = make('input', [this.CSS.imageCaption], {
+      placeholder: 'Введите подпись к изображению',
+      value: file.caption || '',
+      disabled: this.readOnly,
+    });
 
+    imageContainer.appendChild(imageCaption);
+
+    const title = this.api.i18n.t('Delete');
     if (!this.readOnly) {
-      /**
-       * @type {Element}
-       */
       let imageTrash = make('div', [this.CSS.trashButton], {
         innerHTML: IconTrash,
         title,
       });
-
-      this.api.tooltip.onHover(imageTrash, title, {
-        placement: 'top',
-      });
-
+      this.api.tooltip.onHover(imageTrash, title, { placement: 'top' });
       imageTrash.addEventListener('click', () => {
         this.api.tooltip.hide();
-
         let arrayChild = Array.prototype.slice.call(this.nodes.itemsContainer.children);
         let elIndex = arrayChild.indexOf(imageContainer);
-
         if (elIndex !== -1) {
           this.nodes.itemsContainer.removeChild(imageContainer);
-
           this.onDeleteFile(elIndex);
         }
       });
-
       imageContainer.appendChild(imageTrash);
     }
 
     this.nodes.itemsContainer.append(imageContainer);
   }
 
-  /**
-   * Shows caption input
-   *
-   * @param {string} text - caption text
-   * @returns {void}
-   */
   fillCaption(text) {
     if (this.nodes.caption) {
-      this.nodes.caption.innerHTML = text;
+      this.nodes.caption.value = text;
     }
   }
 
-  /**
-   * Changes UI status
-   *
-   * @param {Element} elem
-   * @param {string} status - see {@link Ui.status} constants
-   * @returns {void}
-   */
   toggleStatus(elem, status) {
     for (const statusType in Ui.status) {
-      if (Object.prototype.hasOwnProperty.call(Ui.status, statusType)) {
-        elem.classList.toggle(`${this.CSS.imageContainer}--${Ui.status[statusType]}`, status === Ui.status[statusType]);
-      }
+      elem.classList.toggle(`${this.CSS.imageContainer}--${Ui.status[statusType]}`, status === Ui.status[statusType]);
     }
   }
 
-  /**
-   * @param {int} imageCount
-   * @param {int|null} limitCounter
-   * @returns {void}
-   */
   updateLimitCounter(imageCount, limitCounter) {
     if (limitCounter && this.nodes.limitCounter) {
-      if (imageCount === 0) {
-        this.nodes.limitCounter.style.display = 'none';
-      } else {
-        this.nodes.limitCounter.style.display = null;
-        this.nodes.limitCounter.innerText = `${imageCount} / ${limitCounter}`;
-      }
+      this.nodes.limitCounter.style.display = imageCount === 0 ? 'none' : null;
+      this.nodes.limitCounter.innerText = `${imageCount} / ${limitCounter}`;
     }
   }
 }
 
-/**
- * Helper for making Elements with attributes
- *
- * @param  {string} tagName           - new Element tag name
- * @param  {Array|string} classNames  - list or name of CSS class
- * @param  {object} attributes        - any attributes
- * @returns {Element}
- */
 export const make = function make(tagName, classNames = null, attributes = {}) {
   const el = document.createElement(tagName);
-
-  if (Array.isArray(classNames)) {
-    el.classList.add(...classNames);
-  } else if (classNames) {
-    el.classList.add(classNames);
-  }
-
-  for (const attrName in attributes) {
-    el[attrName] = attributes[attrName];
-  }
-
+  if (Array.isArray(classNames)) el.classList.add(...classNames);
+  else if (classNames) el.classList.add(classNames);
+  for (const attrName in attributes) el[attrName] = attributes[attrName];
   return el;
 };

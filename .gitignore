@@ -2,3 +2,6 @@ node_modules/*
 npm-debug.log
 .idea/
 .DS_Store
+src_scan.txt
+app.py
+bun.lock
